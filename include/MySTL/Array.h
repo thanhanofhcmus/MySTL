@@ -10,8 +10,8 @@ class Array
 {
 public:
 
-	using iterator 			= ContiguousIterator<T, T*, T&>;
-	using const_iterator	= ContiguousIterator<const T, const T*, const T&>;
+	using iterator       = ContiguousIterator<T, T*, T&>;
+	using const_iterator = ContiguousIterator<const T, const T*, const T&>;
 
 	iterator begin() { return iterator(m_Data); }
 	const_iterator begin() const { return const_iterator(m_Data); }
