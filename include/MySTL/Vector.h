@@ -9,8 +9,16 @@ class Vector
 {
 public:
 
-	using iterator       = ContiguousIterator<T, T*, T&>;
-	using const_iterator = ContiguousIterator<const T, const T*, const T&>;
+	using value_t 			= T;
+	using pointer_t 		= T*;
+	using const_pointer_t 	= const T*;
+	using reference_t 		= T&;
+	using difference_t		= std::ptrdiff_t;
+
+public:
+
+	using iterator       = ContiguousIterator<Vector<T>>;
+	using const_iterator = ConstContiguousIterator<Vector<T>>;
 
 	iterator begin() { return iterator(m_Data); }
 	const_iterator begin() const { return const_iterator(m_Data); }
