@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Iterator.h"
-#include <stdint.h>
 #include <initializer_list>
 #include <cassert>
 
@@ -10,8 +9,16 @@ class Array
 {
 public:
 
-	using iterator       = ContiguousIterator<T, T*, T&>;
-	using const_iterator = ContiguousIterator<const T, const T*, const T&>;
+	using value_t 			= T;
+	using pointer_t 		= T*;
+	using const_pointer_t 	= const T*;
+	using reference_t 		= T&;
+	using difference_t		= std::ptrdiff_t;
+
+public:
+
+	using iterator       	= ContiguousIterator<Array<T, Size>>;
+	using const_iterator 	= ConstContiguousIterator<Array<T, Size>>;
 
 	iterator begin() { return iterator(m_Data); }
 	const_iterator begin() const { return const_iterator(m_Data); }
@@ -47,7 +54,7 @@ public:
 
 private:
 
-	T m_Data[Size];
+	value_t m_Data[Size];
 };
 
 template<typename T, size_t Size>

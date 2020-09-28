@@ -4,18 +4,168 @@
 #include <cstddef>
 
 template <typename Container_t>
+class ConstBidirectionalIterator;
+template <typename Container_t>
+class BidirectionalIterator
+{
+public:
+
+	using value_t 		= typename Container_t::value_t;
+	using pointer_t 	= typename Container_t::pointer_t;
+	using reference_t 	= typename Container_t::reference_t;
+	using nodeptr_t 	= typename Container_t::nodeptr_t;
+
+	using const_t		= ConstBidirectionalIterator<Container_t>;
+
+public:
+
+	BidirectionalIterator()
+		:m_ProxyData(nullptr) {}
+
+	BidirectionalIterator(nodeptr_t proxyData)
+		:m_ProxyData(proxyData) {}
+
+	BidirectionalIterator(const BidirectionalIterator&) = default;
+
+	~BidirectionalIterator() {}
+
+	pointer_t operator->() const { return &(m_ProxyData->data); }
+
+	reference_t operator*() const { return m_ProxyData->data; }
+
+	BidirectionalIterator& operator++()
+	{
+		m_ProxyData = m_ProxyData->next;
+		return *this;
+	}
+
+	BidirectionalIterator operator++(int)
+	{
+		auto tmp = *this;
+		(*this).operator++();
+		return tmp;
+	}
+
+	BidirectionalIterator operator--()
+	{
+		m_ProxyData = m_ProxyData->prev;
+		return *this;
+	}
+
+	BidirectionalIterator operator--(int)
+	{
+		auto tmp = *this;
+		(*this).operator--();
+		return tmp;
+	}
+
+	bool operator==(const BidirectionalIterator& other)
+	{
+		return (m_ProxyData == other.m_ProxyData);
+	}
+
+	bool operator!=(const BidirectionalIterator& other)
+	{
+		return !operator==(other);
+	}
+
+private:
+
+	nodeptr_t m_ProxyData;
+
+	friend Container_t;
+	friend const_t;
+
+};
+
+template <typename Container_t>
+class ConstBidirectionalterator
+{
+public:
+
+	using value_t 		= const typename Container_t::value_t;
+	using pointer_t 	= typename Container_t::const_pointer_t;
+	using reference_t 	= const typename Container_t::reference_t;
+	using nodeptr_t 	= typename Container_t::nodeptr_t;
+	// Might need to change from nodeptr_t to const_nodeptr_t
+
+	using non_const_t 	= BidirectionalIterator<Container_t>;
+
+public:
+
+	ConstBidirectionalterator()
+		:m_ProxyData(nullptr) {}
+
+	ConstBidirectionalterator(nodeptr_t proxyData)
+		:m_ProxyData(proxyData) {}
+
+	ConstBidirectionalterator(const ConstBidirectionalterator&) = default;
+
+	~ConstBidirectionalterator() {}
+
+	pointer_t operator->() const { return &(m_ProxyData->data); }
+
+	reference_t operator*() const { return m_ProxyData->data; }
+
+	ConstBidirectionalterator& operator++()
+	{
+		m_ProxyData = m_ProxyData->next;
+		return *this;
+	}
+
+	ConstBidirectionalterator operator++(int)
+	{
+		auto tmp = *this;
+		(*this).operator++();
+		return tmp;
+	}
+
+	ConstBidirectionalterator operator--()
+	{
+		m_ProxyData = m_ProxyData->prev;
+		return *this;
+	}
+
+	ConstBidirectionalterator operator--(int)
+	{
+		auto tmp = *this;
+		(*this).operator--();
+		return tmp;
+	}
+
+	bool operator==(const ConstBidirectionalterator& other)
+	{
+		return (m_ProxyData == other.m_ProxyData);
+	}
+
+	bool operator!=(const ConstBidirectionalterator& other)
+	{
+		return !operator==(other);
+	}
+
+private:
+
+	nodeptr_t m_ProxyData;
+	
+	friend Container_t;
+
+};
+
+
+
+template <typename Container_t>
 class ConstContiguousIterator;
 template <typename Container_t>
 class ContiguousIterator
 {
 public:
 
-	using value_t = 		typename Container_t::value_t;
-	using pointer_t = 		typename Container_t::pointer_t;
-	using reference_t = 	typename Container_t::reference_t;
-	using difference_t = 	typename Container_t::difference_t;
+	using value_t 		= typename Container_t::value_t;
+	using pointer_t 	= typename Container_t::pointer_t;
+	using reference_t 	= typename Container_t::reference_t;
+	using difference_t 	= typename Container_t::difference_t;
 
-	using const_t = ConstContiguousIterator<Container_t>;
+	using const_t 		= ConstContiguousIterator<Container_t>;
 
 public:
 
@@ -148,7 +298,7 @@ public:
 	using reference_t 	= const typename Container_t::reference_t;
 	using difference_t 	= typename Container_t::difference_t;
 
-	using non_const_t = ContiguousIterator<Container_t>;
+	using non_const_t 	= ContiguousIterator<Container_t>;
 
 public:
 

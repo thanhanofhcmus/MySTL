@@ -17,8 +17,8 @@ public:
 
 public:
 
-	using iterator       = ContiguousIterator<Vector<T>>;
-	using const_iterator = ConstContiguousIterator<Vector<T>>;
+	using iterator       	= ContiguousIterator<Vector<T>>;
+	using const_iterator 	= ConstContiguousIterator<Vector<T>>;
 
 	iterator begin() { return iterator(m_Data); }
 	const_iterator begin() const { return const_iterator(m_Data); }
@@ -93,7 +93,6 @@ public:
 private:
 
 	void reallocate(size_t newCapacity);
-
 	void reallocate(bool increaseSize = false);
 
 	void deallocate();
@@ -107,7 +106,7 @@ private:
 
 	size_t m_Capacity;
 	size_t m_Size;
-	T* m_Data;
+	pointer_t m_Data;
 };
 
 template <typename T>
@@ -191,7 +190,6 @@ template <typename T>
 Vector<T>::~Vector()
 {
 	clear();
-	deallocate();
 }
 
 template <typename T>
@@ -204,8 +202,6 @@ Vector<T>& Vector<T>::operator=(const Vector<T>& copy)
 
 		for (size_t i = 0; i < m_Size; ++i)
 			m_Data[i] = copy.m_Data[i];
-
-		copy.m_Data = nullptr;
 	}
 
 	return *this;
