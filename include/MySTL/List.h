@@ -15,6 +15,9 @@ struct List_Node
 
     List_Node(const T& _data, List_Node* _prev, List_Node* _next)
         :data(_data), prev(_prev), next(_next) {};
+
+    List_Node(T&& _data, List_Node* _prev, List_Node* _next)
+        :data(std::move(_data)), prev(_prev), next(_next) {};
 };
 
 template <typename T>
@@ -67,7 +70,7 @@ public:
 
     size_t size() const { return m_Size; }
 
-    size_t empty() const { return (m_Size == 0); }
+    bool empty() const { return (m_Size == 0); }
 
     // Accessors
 
@@ -125,7 +128,7 @@ public:
 
 private:
 
-    void add_elem(bool isPushBack, nodeptr_t val);
+    void link_node(bool atTail, nodeptr_t val);
 
 private:
 
@@ -136,28 +139,23 @@ private:
 };
 
 template <typename T>
-void List<T>::add_elem(bool isPushBack, nodeptr_t val)
+void List<T>::link_node(bool atTail, nodeptr_t val)
 {
     if (m_Head == nullptr)
         m_Head = m_Tail = val;
-    else if (m_Head == m_Tail)
-    {
-        if (isPushBack)
-            m_Head->next = val;
-        else
-            m_Tail->prev = val;
-    }
-    else if (isPushBack)
-    {
-        m_Tail->prev->next = val;
-        m_Tail = val;
-    }
     else
     {
-        m_Head->next->prev = val;
-        m_Head = val;
+        if (atTail)
+        {
+            m_Tail->next = val;
+            m_Tail = val;
+        }
+        else
+        {
+            m_Head->prev = val;
+            m_Head = val;
+        }   
     }
-
     m_Size++;
 }
 
@@ -370,7 +368,7 @@ void List<T>::push_back(const T& val)
 {
     nodeptr_t newNode = new node_t(val, m_Tail, nullptr);
 
-    add_elem(true, newNode);
+    link_node(true, newNode);
 }
 
 template <typename T>
@@ -380,7 +378,7 @@ void List<T>::push_back(T&& val)
 
     new(newNode) node_t(T{ std::forward<T>(val) }, m_Tail, nullptr);
 
-    add_elem(true, newNode);
+    link_node(true, newNode);
 }
 
 template <typename T>
@@ -388,7 +386,7 @@ void List<T>::push_front(const T& val)
 {
     nodeptr_t newNode = new node_t(val, nullptr, m_Head);
 
-    add_elem(false, newNode);
+    link_node(false, newNode);
 }
 
 template <typename T>
@@ -398,7 +396,7 @@ void List<T>::push_front(T&& val)
 
     new(newNode) node_t(T(std::forward<T>(val)), nullptr, m_Head);
 
-    add_elem(false, newNode);
+    link_node(false, newNode);
 }
 
 template <typename T>
@@ -409,7 +407,7 @@ void List<T>::emplace_back(Args&&... args)
 
     new(newNode) node_t(T(std::forward<Args>(args)...), m_Tail, nullptr);
 
-    add_elem(true, newNode);
+    link_node(true, newNode);
 }
 
 template <typename T>
@@ -420,7 +418,7 @@ void List<T>::emplace_front(Args&&... args)
 
     new(newNode) node_t(T(std::forward<Args>(args)...), nullptr, m_Head);
 
-    add_elem(false, newNode);
+    link_node(false, newNode);
 }
 
 template <typename T>

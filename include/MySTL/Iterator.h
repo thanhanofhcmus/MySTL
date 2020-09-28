@@ -20,10 +20,10 @@ public:
 public:
 
 	BidirectionalIterator()
-		:m_ProxyData(nullptr) {}
+		: m_ProxyData(nullptr) {}
 
 	BidirectionalIterator(nodeptr_t proxyData)
-		:m_ProxyData(proxyData) {}
+		: m_ProxyData(proxyData) {}
 
 	BidirectionalIterator(const BidirectionalIterator&) = default;
 
@@ -79,7 +79,7 @@ private:
 };
 
 template <typename Container_t>
-class ConstBidirectionalterator
+class ConstBidirectionalIterator
 {
 public:
 
@@ -93,52 +93,55 @@ public:
 
 public:
 
-	ConstBidirectionalterator()
-		:m_ProxyData(nullptr) {}
+	ConstBidirectionalIterator()
+		: m_ProxyData(nullptr) {}
 
-	ConstBidirectionalterator(nodeptr_t proxyData)
-		:m_ProxyData(proxyData) {}
+	ConstBidirectionalIterator(nodeptr_t proxyData)
+		: m_ProxyData(proxyData) {}
 
-	ConstBidirectionalterator(const ConstBidirectionalterator&) = default;
+	ConstBidirectionalIterator(const non_const_t& iterator) 
+		: m_ProxyData(iterator.m_ProxyData) {}
 
-	~ConstBidirectionalterator() {}
+	ConstBidirectionalIterator(const ConstBidirectionalIterator&) = default;
+
+	~ConstBidirectionalIterator() {}
 
 	pointer_t operator->() const { return &(m_ProxyData->data); }
 
 	reference_t operator*() const { return m_ProxyData->data; }
 
-	ConstBidirectionalterator& operator++()
+	ConstBidirectionalIterator& operator++()
 	{
 		m_ProxyData = m_ProxyData->next;
 		return *this;
 	}
 
-	ConstBidirectionalterator operator++(int)
+	ConstBidirectionalIterator operator++(int)
 	{
 		auto tmp = *this;
 		(*this).operator++();
 		return tmp;
 	}
 
-	ConstBidirectionalterator operator--()
+	ConstBidirectionalIterator operator--()
 	{
 		m_ProxyData = m_ProxyData->prev;
 		return *this;
 	}
 
-	ConstBidirectionalterator operator--(int)
+	ConstBidirectionalIterator operator--(int)
 	{
 		auto tmp = *this;
 		(*this).operator--();
 		return tmp;
 	}
 
-	bool operator==(const ConstBidirectionalterator& other)
+	bool operator==(const ConstBidirectionalIterator& other)
 	{
 		return (m_ProxyData == other.m_ProxyData);
 	}
 
-	bool operator!=(const ConstBidirectionalterator& other)
+	bool operator!=(const ConstBidirectionalIterator& other)
 	{
 		return !operator==(other);
 	}
@@ -278,6 +281,7 @@ private:
 
 	pointer_t m_ProxyData;
 
+	friend Container_t;
 	friend const_t;
 };
 
@@ -413,6 +417,8 @@ public:
 private:
 
 	pointer_t m_ProxyData;
+
+	friend Container_t;
 };
 
 template <typename Container_t>
