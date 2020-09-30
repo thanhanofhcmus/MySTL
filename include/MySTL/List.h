@@ -6,18 +6,37 @@
 template <typename T>
 struct List_Node
 {
-    T data;
+    // List_Node's data has to be in this order so it could be
+    // reinterpret-casted correctly to List_Node_No_Value.
+
     List_Node* prev;
     List_Node* next;
+    T data;
 
     List_Node()
-        :data(T()), prev(nullptr), next(nullptr) {}
+        : data(T()), prev(nullptr), next(nullptr) {}
+
+    List_Node(List_Node* _prev, List_Node* _next)
+        : prev(_prev), next(_next) {}
 
     List_Node(const T& _data, List_Node* _prev, List_Node* _next)
-        :data(_data), prev(_prev), next(_next) {};
+        :  data(_data), prev(_prev), next(_next) {}
 
     List_Node(T&& _data, List_Node* _prev, List_Node* _next)
-        :data(std::move(_data)), prev(_prev), next(_next) {};
+        : data(std::move(_data)), prev(_prev), next(_next) {}
+};
+
+template <typename T>
+struct List_Node_No_Value
+{
+    List_Node<T>* prev;
+    List_Node<T>* next;
+
+    List_Node_No_Value()
+        : prev(nullptr), next(nullptr) {}
+
+    List_Node_No_Value(List_Node<T>* _prev, List_Node<T>* _next)
+        : prev(_prev), next(_next) {}
 };
 
 template <typename T>
@@ -40,8 +59,17 @@ public:
     iterator begin() { return iterator(m_Head); }
     const_iterator begin() const { return const_iterator(m_Head); }
 
-    iterator end() { return iterator(nullptr); }
-    const_iterator end() const { return const_iterator(nullptr); }
+    iterator end() 
+    {
+        m_End = List_Node_No_Value<T>(m_Tail, nullptr);
+        return (nodeptr_t)&m_End; 
+    }
+
+    const_iterator end() const
+    {
+        m_End = List_Node_No_Value<T>(m_Tail, nullptr);
+        return (nodeptr_t)&m_End; 
+    }
 
 public:
 
@@ -85,6 +113,7 @@ public:
     void clear();
 
     void erase(const_iterator pos);
+    void erase(const_iterator begin, const_iterator end);
 
     void insert(const_iterator pos, const T& val);
     void insert(const_iterator pos, T&& val);
@@ -136,6 +165,7 @@ private:
     nodeptr_t m_Tail;
     size_t m_Size;
 
+    mutable List_Node_No_Value<T> m_End;
 };
 
 template <typename T>
@@ -284,7 +314,7 @@ void List<T>::clear()
     nodeptr_t iter = m_Head;
     nodeptr_t next = nullptr;
 
-    while (iter != nullptr)
+    while (iter != nodeptr_t(&m_End))
     {
         next = iter->next;
         delete iter;
@@ -310,6 +340,37 @@ void List<T>::erase(const_iterator pos)
     prev->next = next;
     next->prev = prev;
     m_Size--;
+}
+
+template <typename T>
+void List<T>::erase(const_iterator begin, const_iterator end)
+{
+    if (empty() || !begin.m_ProxyData)
+        return;
+
+    nodeptr_t iter = begin.m_ProxyData;
+    nodeptr_t first = iter->prev;
+    nodeptr_t last = (end.m_ProxyData) ? (end.m_ProxyData)->next : nodeptr_t(&m_End);
+    nodeptr_t next = nullptr;
+
+    while (iter != last)
+    {
+        next = iter->next;
+        delete iter;
+        iter = next;
+        m_Size--;
+    }
+
+    if (first)
+        first->next = last;
+    else
+        m_Head->next = last;
+    
+    if (last)
+        last->prev = first;
+    else
+        m_Tail = first;
+    
 }
 
 template <typename T>
@@ -366,7 +427,7 @@ void List<T>::emplace(const_iterator pos, Args&&... args)
 template <typename T>
 void List<T>::push_back(const T& val)
 {
-    nodeptr_t newNode = new node_t(val, m_Tail, nullptr);
+    nodeptr_t newNode = new node_t(val, m_Tail, nodeptr_t(&m_End));
 
     link_node(true, newNode);
 }
@@ -376,7 +437,7 @@ void List<T>::push_back(T&& val)
 {
     nodeptr_t newNode = (nodeptr_t)::operator new(sizeof(node_t));
 
-    new(newNode) node_t(T{ std::forward<T>(val) }, m_Tail, nullptr);
+    new(newNode) node_t(T{ std::forward<T>(val) }, m_Tail, nodeptr_t(&m_End));
 
     link_node(true, newNode);
 }
@@ -405,7 +466,7 @@ void List<T>::emplace_back(Args&&... args)
 {
     nodeptr_t newNode = (nodeptr_t)::operator new(sizeof(node_t));
 
-    new(newNode) node_t(T(std::forward<Args>(args)...), m_Tail, nullptr);
+    new(newNode) node_t(T(std::forward<Args>(args)...), m_Tail, nodeptr_t(&m_End));
 
     link_node(true, newNode);
 }
@@ -446,4 +507,3 @@ void List<T>::pop_front()
     m_Head = nextHead;
     m_Size--;
 }
-

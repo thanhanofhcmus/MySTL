@@ -175,8 +175,8 @@ public:
 	ContiguousIterator()
 		: m_ProxyData(nullptr) {}
 
-	ContiguousIterator(pointer_t proyData)
-		: m_ProxyData(proyData) {}
+	ContiguousIterator(pointer_t proxyData)
+		: m_ProxyData(proxyData) {}
 	
 	ContiguousIterator(const ContiguousIterator&) = default;
 
