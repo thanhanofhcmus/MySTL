@@ -1,396 +1,265 @@
 #pragma once
 
 #include "Iterator.h"
-#include <stdexcept>
+#include "MySTL/algorithms.h"
 #include <initializer_list>
+#include <stdexcept>
+#include <utility>
+
+namespace mystl {
 
 template <typename T>
-class Vector
-{
+class Vector {
 public:
+  using value_type = T;
+  using pointer = T *;
+  using const_pointer = const T *;
+  using reference = T &;
+  using const_reference = T const &;
 
-	using value_t 			= T;
-	using pointer_t 		= T*;
-	using const_pointer_t 	= const T*;
-	using reference_t 		= T&;
-	using difference_t		= std::ptrdiff_t;
+  using difference_type = std::ptrdiff_t;
+  using size_type = std::size_t;
 
-public:
-
-	using iterator       	= ContiguousIterator<Vector<T>>;
-	using const_iterator 	= ConstContiguousIterator<Vector<T>>;
-
-	iterator begin() { return iterator(m_Data); }
-	const_iterator begin() const { return const_iterator(m_Data); }
-
-	iterator end() { return iterator(m_Data + m_Size); }
-	const_iterator end() const { return const_iterator(m_Data + m_Size); }
+  using iterator = ContiguousIterator<Vector<T>>;
+  using const_iterator = ConstContiguousIterator<Vector<T>>;
 
 public:
+  constexpr explicit Vector() : m_Capacity(0), m_Size(0), m_Data(nullptr) {}
 
-	// Constructors - destructor
+  constexpr explicit Vector(size_type size, const T &val = T{}) : Vector{} {
+    realloc_and_resize(size);
+    algo::fill(m_Data, m_Data + size, val);
+  }
 
-	Vector()
-		:m_Capacity(0), m_Size(0), m_Data(nullptr) {}
+  constexpr explicit Vector(std::initializer_list<T> iList) : Vector{} {
+    realloc_and_resize(iList.size());
+    algo::copy(iList.begin(), iList.end(), m_Data);
+  }
 
-	Vector(std::size_t size, const T& val = T());
+  constexpr explicit Vector(const Vector<T> &copy) : Vector{} {
+    realloc_and_resize(copy.m_Size);
+    algo::copy(copy.begin(), copy.end(), m_Data);
+  }
 
-	Vector(std::initializer_list<T> iList);
+  constexpr explicit Vector(Vector<T> &&move)
+      : m_Capacity(move.m_Capacity), m_Size(move.m_Size), m_Data(move.m_Data) {
+    move.m_Data = nullptr;
+  }
 
-	Vector(const Vector<T>& copy);
+  constexpr ~Vector() { clear(); }
 
-	Vector(Vector<T>&& move);
+  constexpr Vector &operator=(const Vector<T> &copy) {
+    if (this != &copy) {
+      deallocate();
+      realloc_and_resize(copy.m_Size);
+      algo::copy(copy.begin(), copy.end(), m_Data);
+    }
+    return *this;
+  }
 
-	~Vector();
+  constexpr Vector &operator=(Vector<T> &&move) {
+    if (this != &move) {
+      deallocate();
+      m_Capacity = move.m_Capacity;
+      m_Size = move.m_Size;
+      m_Data = move.m_Data;
+      move.m_Data = nullptr;
+    }
+    return *this;
+  }
 
-	// assignment operators
+  constexpr size_type capacity() const { return m_Capacity; }
 
-	Vector& operator=(const Vector<T>& copy);
+  constexpr size_type size() const { return m_Size; }
 
-	Vector& operator=(Vector<T>&& move);
+  constexpr bool empty() const { return (m_Size == 0); }
 
-	// Capacity
+  constexpr iterator begin() { return iterator{m_Data}; }
+  constexpr const_iterator begin() const { return cbegin(); }
+  constexpr const_iterator cbegin() const { return const_iterator{m_Data}; }
 
-	std::size_t capacity() const { return m_Capacity; }
+  constexpr iterator end() { return iterator{m_Data + m_Size}; }
+  constexpr const_iterator end() const { return cend(); }
+  constexpr const_iterator cend() { return const_iterator{m_Data + m_Size}; }
 
-	std::size_t size() const { return m_Size; }
+  constexpr void reserve(size_type capacity) {
+    // Do not use reallocate
+    T *newData = new T[capacity];
+    for (int i = 0; i < m_Size; ++i) {
+      newData[i] = std::move(m_Data[i]);
+    }
+    deallocate();
+    m_Data = newData;
+    m_Capacity = capacity;
+  }
 
-	bool empty() const { return (m_Size == 0); }
+  template <typename Self>
+  constexpr auto &&operator[](this Self &&self, size_type index) {
+    if (index < 0) {
+      throw std::out_of_range("Invalid index");
+    }
+    if (self.m_Size == 0) {
+      throw std::out_of_range("Vector has zero element");
+    }
+    if (index > self.m_Size) {
+      throw std::out_of_range("Vector index out of range");
+    }
+    return std::forward<Self>(self).m_Data[index];
+  }
 
-	void reserve(std::size_t capacity);
+  template <typename Self>
+  constexpr auto &&front(this Self &&self) {
+    return std::forward<Self>(self)[0];
+  }
 
-	// Accessors
+  template <typename Self>
+  constexpr auto &&back(this Self &&self) {
+    return std::forward<Self>(self)[self.m_Size - 1];
+  }
 
-	T& operator[](std::size_t index);
-	const T& operator[](std::size_t index) const;
+  // Modifiers
 
-	T& front();
-	const T& front() const;
+  constexpr void clear() {
+    for (std::size_t i = 0; i < m_Size; ++i) {
+      m_Data[i].~T();
+    }
+    deallocate();
+    m_Capacity = 0;
+    m_Size = 0;
+    m_Data = nullptr;
+  }
 
-	T& back();
-	const T& back() const;
+  // TODO: add iterator versions
 
-	// Modifiers
+  constexpr void insert(size_type pos, const T &val = T{},
+                        size_type count = 1) {
+    size_t newSize = algo::max(m_Size, pos) + count;
+    size_t oldSize = m_Size;
 
-	void clear();
+    if (newSize > m_Capacity) {
+      realloc_and_resize(newSize);
+    }
 
-	// TODO: add iterator versions
+    // if pos > current size, default init the gap values
+    algo::fill(m_Data + oldSize, m_Data + pos, T{});
 
-	void insert(std::size_t pos, const T& val = T(), std::size_t count = 1);
+    // if pos is in the array, move the current values to offset amount
+    // make room for the new values
+    if (pos < oldSize) {
+      size_type offset = oldSize - pos;
+      for (size_type i = 1; i <= count; ++i) {
+        m_Data[newSize - i] = std::move(m_Data[pos + offset - i]);
+      }
+    }
 
-	void erase(std::size_t pos, std::size_t count = 1);
+    algo::fill(m_Data + pos, m_Data + pos + count, val);
+  }
 
-	void push_back(const T& val);
-	void push_back(T&& val);
+  constexpr void erase(size_type pos, size_type count = 1) {
+    if (pos >= m_Size) {
+      return;
+    }
 
-	template<typename... Args>
-	void emplace_back(Args&&... args);
+    count = algo::min(m_Size - pos, count);
 
-	void pop_back();
+    for (size_type i = pos; i < m_Size - count; ++i) {
+      m_Data[i] = std::move(m_Data[i + count]);
+    }
 
-	void resize(std::size_t size, const T& val = T());
+    m_Size -= count;
+
+    if ((m_GrowthFactor * m_Size < m_Capacity) ||
+        (m_Size < m_Capacity - m_MaxSizeDiff))
+      reallocate();
+  }
+
+  constexpr void push_back(const T &val) {
+    if (m_Size + 1 >= m_Capacity) {
+      reallocate(true);
+    }
+    m_Data[m_Size] = std::move(val);
+    m_Size++;
+  }
+
+  constexpr void push_back(T &&val) {
+    if (m_Size + 1 >= m_Capacity) {
+      reallocate(true);
+    }
+    m_Data[m_Size] = std::move(val);
+    m_Size++;
+  }
+
+  template <typename... Args>
+  constexpr void emplace_back(Args &&...args) {
+    if (m_Size + 1 >= m_Capacity) {
+      reallocate();
+    }
+    new (&m_Data[m_Size++]) T{std::forward<Args>(args)...};
+  }
+
+  constexpr void pop_back() {
+    if (m_Size <= 0) {
+      return;
+    }
+
+    delete &m_Data[m_Size - 1];
+    --m_Size;
+    if ((m_GrowthFactor * m_Size < m_Capacity) ||
+        (m_Size < m_Capacity - m_MaxSizeDiff))
+      reallocate();
+  }
+
+  void resize(size_type size, const T &val = T{}) {
+    if (size == m_Size) {
+      return;
+    }
+    size_type oldSize = m_Size;
+    realloc_and_resize(size);
+    algo::fill(m_Data + oldSize, m_Data + size, val);
+  }
 
 private:
+  void reallocate(size_type newCapacity) {
+    if (newCapacity - m_Size > m_MaxSizeDiff) {
+      newCapacity = m_Size + m_MaxSizeDiff;
+    }
 
-	void reallocate(std::size_t newCapacity);
-	void reallocate(bool increaseSize = false);
+    T *newData = (T *)::operator new(newCapacity * sizeof(T));
+    for (size_type i = 0; i < m_Size; ++i) {
+      newData[i] = std::move(m_Data[i]);
+      m_Data[i].~T();
+    }
 
-	void deallocate();
+    deallocate();
+    m_Data = newData;
+    m_Capacity = newCapacity;
+  }
 
-	void realloc_and_resize(std::size_t newSize);
+  void reallocate(bool increaseSize = false) {
+    auto newSize = m_GrowthFactor * (static_cast<float>(m_Size) +
+                                     static_cast<float>(increaseSize));
+    reallocate(static_cast<size_type>(newSize));
+  }
+
+  void deallocate() {
+    // Deallocate does not attemp to set m_Size and m_Capacity to valid data
+    // ::operator delete(m_Data, m_Capacity * sizeof(T));
+    ::operator delete(m_Data);
+  }
+
+  void realloc_and_resize(size_type newSize) {
+    auto newCapacity = m_GrowthFactor * static_cast<float>(newSize);
+    reallocate(static_cast<size_type>(newCapacity));
+    m_Size = newSize;
+  }
 
 private:
+  static constexpr float m_GrowthFactor = 1.5f;
+  static constexpr float m_MaxSizeDiff = 50.0f;
 
-	static constexpr float m_GrowthFactor = 1.5f;
-	static constexpr float m_MaxSizeDiff = 50.0f;
-
-	std::size_t m_Capacity;
-	std::size_t m_Size;
-	pointer_t m_Data;
+  size_type m_Capacity;
+  size_type m_Size;
+  pointer m_Data;
 };
 
-template <typename T>
-void Vector<T>::reallocate(std::size_t newCapacity)
-{
-	if (newCapacity - m_Size > m_MaxSizeDiff)
-		newCapacity = m_Size + m_MaxSizeDiff;
-
-	T* newData = (T*)::operator new(newCapacity * sizeof(T));
-	for (std::size_t i = 0; i < m_Size; ++i)
-	{
-		newData[i] = std::move(m_Data[i]);
-		m_Data[i].~T();
-	}
-
-	deallocate();
-	m_Data = newData;
-	m_Capacity = newCapacity;
-}
-
-template <typename T>
-void Vector<T>::reallocate(bool increaseSize)
-{
-	reallocate((std::size_t)(m_GrowthFactor * (m_Size + (std::size_t)increaseSize)));
-}
-
-template<typename T>
-void Vector<T>::deallocate()
-{
-	// Deallocate does not attemp to set m_Size and m_Capacity to valid data
-
-	::operator delete(m_Data, m_Capacity * sizeof(T));
-}
-
-template<typename T>
-void Vector<T>::realloc_and_resize(std::size_t newSize)
-{
-	reallocate((std::size_t)(m_GrowthFactor * newSize));
-	m_Size = newSize;
-}
-
-template <typename T>
-Vector<T>::Vector(std::size_t size, const T& val)
-	:Vector()
-{
-	realloc_and_resize(size);
-
-	for (std::size_t i = 0; i < size; ++i)
-		m_Data[i] = val;
-}
-
-template <typename T>
-Vector<T>::Vector(std::initializer_list<T> iList)
-	:Vector()
-{
-	realloc_and_resize(iList.size());
-
-	const T* iListData = iList.begin();
-	for (std::size_t i = 0; i < m_Size; ++i)
-		m_Data[i] = std::move(iListData[i]);
-}
-
-template <typename T>
-Vector<T>::Vector(const Vector<T>& copy)
-	:Vector()
-{
-	realloc_and_resize(copy.m_Size);
-
-	for (std::size_t i = 0; i < m_Size; ++i)
-		m_Data[i] = copy.m_Data[i];
-}
-
-template <typename T>
-Vector<T>::Vector(Vector<T>&& move)
-	:m_Capacity(move.m_Capacity), m_Size(move.m_Size), m_Data(move.m_Data)
-{
-	move.m_Data = nullptr;
-}
-
-template <typename T>
-Vector<T>::~Vector()
-{
-	clear();
-}
-
-template <typename T>
-Vector<T>& Vector<T>::operator=(const Vector<T>& copy)
-{
-	if (this != &copy)
-	{
-		deallocate();
-		realloc_and_resize(copy.m_Size);
-
-		for (std::size_t i = 0; i < m_Size; ++i)
-			m_Data[i] = copy.m_Data[i];
-	}
-
-	return *this;
-}
-
-template <typename T>
-Vector<T>& Vector<T>::operator=(Vector<T>&& move)
-{
-	if (this != &move)
-	{
-		deallocate();
-
-		m_Capacity = move.m_Capacity;
-		m_Size = move.m_Size;
-		m_Data = move.m_Data;
-
-		move.m_Data = nullptr;
-	}
-}
-
-template <typename T>
-void Vector<T>::reserve(std::size_t capacity)
-{
-	// Do not use reallocate
-
-	T* newData = new T[capacity];
-	for (int i = 0; i < m_Size; ++i)
-		newData[i] = std::move(m_Data[i]);
-
-	deallocate();
-	m_Data = newData;
-	m_Capacity = capacity;
-}
-
-template <typename T>
-T& Vector<T>::operator[](std::size_t index)
-{
-	if (index > m_Size)
-		throw std::out_of_range("Vector index out of range!");
-	return m_Data[index];
-}
-
-template <typename T>
-const T& Vector<T>::operator[](std::size_t index) const
-{
-	if (index > m_Size)
-		throw std::out_of_range("Vector index out of range!");
-	return m_Data[index];
-}
-
-template <typename T>
-T& Vector<T>::front()
-{
-	if (m_Size == 0)
-		throw std::out_of_range("Vector has zero element!");
-	return *m_Data;
-}
-
-template <typename T>
-const T& Vector<T>::front() const
-{
-	if (m_Size == 0)
-		throw std::out_of_range("Vector has zero element!");
-	return *m_Data;
-}
-
-template <typename T>
-T& Vector<T>::back()
-{
-	if (m_Size == 0)
-		throw std::out_of_range("Vector has zero element!");
-	return m_Data[m_Size - 1];
-}
-
-template <typename T>
-const T& Vector<T>::back() const
-{
-	if (m_Size == 0)
-		throw std::out_of_range("Vector has zero element!");
-	return *m_Data[m_Size - 1];
-}
-
-template <typename T>
-void Vector<T>::clear()
-{
-	for (std::size_t i = 0; i < m_Size; ++i)
-		m_Data[i].~T();
-
-	deallocate();
-	m_Capacity = 0;
-	m_Size = 0;
-	m_Data = nullptr;
-}
-
-template <typename T>
-void Vector<T>::insert(std::size_t pos, const T& val, std::size_t count)
-{
-	const std::size_t interPos = (m_Size > pos) ? m_Size : pos;
-	const std::size_t newSize = interPos + count;
-	const std::size_t oldSize = m_Size;
-
-	if (newSize > m_Capacity)
-		realloc_and_resize(newSize);
-
-	for (std::size_t i = oldSize; i < pos; ++i)
-		m_Data[i] = T();
-
-	if (pos < oldSize)
-	{
-		const std::size_t offset = oldSize - pos;
-		for (std::size_t i = 1; i <= count; ++i)
-			m_Data[newSize - i] = std::move(m_Data[pos + offset - i]);
-	}
-
-	for (std::size_t i = 0; i < count; ++i)
-		m_Data[pos + i] = val;
-}
-
-template <typename T>
-void Vector<T>::erase(std::size_t pos, std::size_t count)
-{
-	if (pos >= m_Size)
-		return;
-
-	count = (m_Size - pos > count) ? count : (m_Size - pos);
-
-	for (std::size_t i = pos; i < m_Size - count; ++i)
-		m_Data[i] = std::move(m_Data[i + count]);
-
-	m_Size -= count;
-
-	if ((m_GrowthFactor * m_Size < m_Capacity) ||
-		(m_Size < m_Capacity - m_MaxSizeDiff))
-		reallocate();
-}
-
-template <typename T>
-template <typename... Args>
-void Vector<T>::emplace_back(Args&&... args)
-{
-	if (m_Size + 1 >= m_Capacity)
-		reallocate();
-
-	new(&m_Data[m_Size++]) T{ std::forward<Args>(args)... };
-}
-
-template <typename T>
-void Vector<T>::push_back(const T& val)
-{
-	if (m_Size + 1 >= m_Capacity)
-		reallocate(true);
-
-	m_Data[m_Size++] = val;
-}
-
-template <typename T>
-void Vector<T>::push_back(T&& val)
-{
-
-	if (m_Size + 1 >= m_Capacity)
-		reallocate(true);
-
-	m_Data[m_Size] = std::move(val);
-	m_Size++;
-}
-
-template <typename T>
-void Vector<T>::pop_back()
-{
-	if (m_Size <= 0)
-		return;
-
-	delete &m_Data[m_Size - 1];
-	--m_Size;
-
-	if ((m_GrowthFactor * m_Size < m_Capacity) ||
-		(m_Size < m_Capacity - m_MaxSizeDiff))
-		reallocate();
-}
-
-template <typename T>
-void Vector<T>::resize(std::size_t size, const T& val)
-{
-	if (size == m_Size)
-		return;
-
-	std::size_t oldSize = m_Size;
-
-	realloc_and_resize(size);
-	for (std::size_t i = oldSize; i < size; ++i)
-		*(m_Data + i) = val;
-}
+} // namespace mystl
