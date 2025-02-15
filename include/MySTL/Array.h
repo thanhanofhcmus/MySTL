@@ -22,10 +22,12 @@ public:
 
 public:
   constexpr iterator begin() { return iterator{m_Data}; }
-  constexpr const_iterator begin() const { return const_iterator{m_Data}; }
+  constexpr const_iterator begin() const { return cbegin(); }
+  constexpr const_iterator cbegin() const { return const_iterator{m_Data}; }
 
   constexpr iterator end() { return iterator{m_Data + Size}; }
-  constexpr const_iterator end() const { return const_iterator{m_Data + Size}; }
+  constexpr const_iterator end() const { return cend(); }
+  constexpr const_iterator cend() { return const_iterator{m_Data + Size}; }
 
 public:
   constexpr explicit Array() = default;
