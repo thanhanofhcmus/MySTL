@@ -1,429 +1,247 @@
 #pragma once
 
-#include <stdint.h>
-#include <cstddef>
-
 template <typename Container_t>
 class ConstBidirectionalIterator;
+
 template <typename Container_t>
-class BidirectionalIterator
-{
+class BidirectionalIterator {
 public:
+  using value_type = typename Container_t::value_type;
+  using pointer_type = typename Container_t::pointer_type;
+  using reference_type = typename Container_t::reference_type;
+  using nodeptr_type = typename Container_t::nodeptr_type;
 
-	using value_t 		= typename Container_t::value_t;
-	using pointer_t 	= typename Container_t::pointer_t;
-	using reference_t 	= typename Container_t::reference_t;
-	using nodeptr_t 	= typename Container_t::nodeptr_t;
-
-	using const_t		= ConstBidirectionalIterator<Container_t>;
+  using const_type = ConstBidirectionalIterator<Container_t>;
 
 public:
+  explicit BidirectionalIterator() : m_ProxyData(nullptr) {}
 
-	BidirectionalIterator()
-		: m_ProxyData(nullptr) {}
+  explicit BidirectionalIterator(nodeptr_type proxyData)
+      : m_ProxyData(proxyData) {}
 
-	BidirectionalIterator(nodeptr_t proxyData)
-		: m_ProxyData(proxyData) {}
+  explicit BidirectionalIterator(const BidirectionalIterator &) = default;
 
-	BidirectionalIterator(const BidirectionalIterator&) = default;
+  ~BidirectionalIterator() = default;
 
-	~BidirectionalIterator() {}
+  pointer_type operator->() const { return &(m_ProxyData->data); }
 
-	pointer_t operator->() const { return &(m_ProxyData->data); }
+  reference_type operator*() const { return m_ProxyData->data; }
 
-	reference_t operator*() const { return m_ProxyData->data; }
+  BidirectionalIterator &operator++() {
+    m_ProxyData = m_ProxyData->next;
+    return *this;
+  }
 
-	BidirectionalIterator& operator++()
-	{
-		m_ProxyData = m_ProxyData->next;
-		return *this;
-	}
+  BidirectionalIterator operator++(int) {
+    auto tmp = *this;
+    (*this).operator++();
+    return tmp;
+  }
 
-	BidirectionalIterator operator++(int)
-	{
-		auto tmp = *this;
-		(*this).operator++();
-		return tmp;
-	}
+  BidirectionalIterator operator--() {
+    m_ProxyData = m_ProxyData->prev;
+    return *this;
+  }
 
-	BidirectionalIterator operator--()
-	{
-		m_ProxyData = m_ProxyData->prev;
-		return *this;
-	}
+  BidirectionalIterator operator--(int) {
+    auto tmp = *this;
+    (*this).operator--();
+    return tmp;
+  }
 
-	BidirectionalIterator operator--(int)
-	{
-		auto tmp = *this;
-		(*this).operator--();
-		return tmp;
-	}
+  bool operator==(const BidirectionalIterator &other) {
+    return (m_ProxyData == other.m_ProxyData);
+  }
 
-	bool operator==(const BidirectionalIterator& other)
-	{
-		return (m_ProxyData == other.m_ProxyData);
-	}
-
-	bool operator!=(const BidirectionalIterator& other)
-	{
-		return !operator==(other);
-	}
+  bool operator!=(const BidirectionalIterator &other) {
+    return !operator==(other);
+  }
 
 private:
+  nodeptr_type m_ProxyData;
 
-	nodeptr_t m_ProxyData;
-
-	friend Container_t;
-	friend const_t;
-
+  friend Container_t;
+  friend const_type;
 };
 
 template <typename Container_t>
-class ConstBidirectionalIterator
-{
+class ConstBidirectionalIterator {
 public:
+  using value_t = const typename Container_t::value_t;
+  using pointer_t = typename Container_t::const_pointer_t;
+  using reference_t = const typename Container_t::reference_t;
+  using nodeptr_t = typename Container_t::nodeptr_t;
+  // Might need to change from nodeptr_t to const_nodeptr_t
 
-	using value_t 		= const typename Container_t::value_t;
-	using pointer_t 	= typename Container_t::const_pointer_t;
-	using reference_t 	= const typename Container_t::reference_t;
-	using nodeptr_t 	= typename Container_t::nodeptr_t;
-	// Might need to change from nodeptr_t to const_nodeptr_t
-
-	using non_const_t 	= BidirectionalIterator<Container_t>;
+  using non_const_t = BidirectionalIterator<Container_t>;
 
 public:
+  ConstBidirectionalIterator() : m_ProxyData(nullptr) {}
 
-	ConstBidirectionalIterator()
-		: m_ProxyData(nullptr) {}
+  ConstBidirectionalIterator(nodeptr_t proxyData) : m_ProxyData(proxyData) {}
 
-	ConstBidirectionalIterator(nodeptr_t proxyData)
-		: m_ProxyData(proxyData) {}
+  ConstBidirectionalIterator(const non_const_t &iterator)
+      : m_ProxyData(iterator.m_ProxyData) {}
 
-	ConstBidirectionalIterator(const non_const_t& iterator) 
-		: m_ProxyData(iterator.m_ProxyData) {}
+  ConstBidirectionalIterator(const ConstBidirectionalIterator &) = default;
 
-	ConstBidirectionalIterator(const ConstBidirectionalIterator&) = default;
+  ~ConstBidirectionalIterator() {}
 
-	~ConstBidirectionalIterator() {}
+  pointer_t operator->() const { return &(m_ProxyData->data); }
 
-	pointer_t operator->() const { return &(m_ProxyData->data); }
+  reference_t operator*() const { return m_ProxyData->data; }
 
-	reference_t operator*() const { return m_ProxyData->data; }
+  ConstBidirectionalIterator &operator++() {
+    m_ProxyData = m_ProxyData->next;
+    return *this;
+  }
 
-	ConstBidirectionalIterator& operator++()
-	{
-		m_ProxyData = m_ProxyData->next;
-		return *this;
-	}
+  ConstBidirectionalIterator operator++(int) {
+    auto tmp = *this;
+    (*this).operator++();
+    return tmp;
+  }
 
-	ConstBidirectionalIterator operator++(int)
-	{
-		auto tmp = *this;
-		(*this).operator++();
-		return tmp;
-	}
+  ConstBidirectionalIterator operator--() {
+    m_ProxyData = m_ProxyData->prev;
+    return *this;
+  }
 
-	ConstBidirectionalIterator operator--()
-	{
-		m_ProxyData = m_ProxyData->prev;
-		return *this;
-	}
+  ConstBidirectionalIterator operator--(int) {
+    auto tmp = *this;
+    (*this).operator--();
+    return tmp;
+  }
 
-	ConstBidirectionalIterator operator--(int)
-	{
-		auto tmp = *this;
-		(*this).operator--();
-		return tmp;
-	}
+  bool operator==(const ConstBidirectionalIterator &other) {
+    return (m_ProxyData == other.m_ProxyData);
+  }
 
-	bool operator==(const ConstBidirectionalIterator& other)
-	{
-		return (m_ProxyData == other.m_ProxyData);
-	}
-
-	bool operator!=(const ConstBidirectionalIterator& other)
-	{
-		return !operator==(other);
-	}
+  bool operator!=(const ConstBidirectionalIterator &other) {
+    return !operator==(other);
+  }
 
 private:
+  nodeptr_t m_ProxyData;
 
-	nodeptr_t m_ProxyData;
-	
-	friend Container_t;
-
+  friend Container_t;
 };
 
+namespace internal {
 
-
-template <typename Container_t>
-class ConstContiguousIterator;
-template <typename Container_t>
-class ContiguousIterator
-{
+template <typename pointer_t, typename reference_t, typename difference_t>
+class base_cont_iter {
 public:
+  using pointer_type = pointer_t;
+  using reference_type = reference_t;
+  using difference_type = difference_t;
 
-	using value_t 		= typename Container_t::value_t;
-	using pointer_t 	= typename Container_t::pointer_t;
-	using reference_t 	= typename Container_t::reference_t;
-	using difference_t 	= typename Container_t::difference_t;
+  constexpr explicit base_cont_iter() : m_ProxyData(nullptr) {}
 
-	using const_t 		= ConstContiguousIterator<Container_t>;
+  constexpr explicit base_cont_iter(pointer_t proyData)
+      : m_ProxyData(proyData) {}
 
-public:
+  constexpr explicit base_cont_iter(const base_cont_iter &) = default;
 
-	ContiguousIterator()
-		: m_ProxyData(nullptr) {}
+  ~base_cont_iter() {}
 
-	ContiguousIterator(pointer_t proxyData)
-		: m_ProxyData(proxyData) {}
-	
-	ContiguousIterator(const ContiguousIterator&) = default;
+  pointer_t operator->() const { return m_ProxyData; }
 
-	~ContiguousIterator() {}
+  reference_t operator*() const { return *m_ProxyData; }
 
-	pointer_t operator->() const { return m_ProxyData; }
+  base_cont_iter &operator++() {
+    ++m_ProxyData;
+    return *this;
+  }
 
-	reference_t operator*() const { return *m_ProxyData; }
+  base_cont_iter operator++(int) {
+    base_cont_iter tmp = *this;
+    ++(*this);
+    return tmp;
+  }
 
-	ContiguousIterator& operator++()
-	{
-		++m_ProxyData;
-		return *this;
-	}
+  base_cont_iter &operator--() {
+    --m_ProxyData;
+    return *this;
+  }
 
-	ContiguousIterator operator++(int)
-	{
-		ContiguousIterator tmp = *this;
-		++(*this);
-		return tmp;
-	}
+  base_cont_iter operator--(int) {
+    auto tmp = *this;
+    ++(*this);
+    return tmp;
+  }
 
-	ContiguousIterator& operator--()
-	{
-		--m_ProxyData;
-		return *this;
-	}
+  base_cont_iter &operator+=(difference_t offset) {
+    m_ProxyData += offset;
+    return *this;
+  }
 
-	ContiguousIterator operator--(int)
-	{
-		ContiguousIterator tmp = *this;
-		++(*this);
-		return tmp;
-	}
+  base_cont_iter &operator-=(difference_t offset) {
+    (*this) += -offset;
+    return *this;
+  }
 
-	ContiguousIterator& operator+=(difference_t offset)
-	{
-		m_ProxyData += offset;
-		return *this;
-	}
+  base_cont_iter operator+(difference_t offset) {
+    auto tmp = *this;
+    return tmp.operator+=(offset);
+  }
 
-	ContiguousIterator& operator-=(difference_t offset)
-	{
-		(*this) += -offset;
-		return *this;
-	}
+  base_cont_iter operator-(difference_t offset) {
+    auto tmp = *this;
+    return tmp.operator-=(offset);
+  }
 
-	ContiguousIterator operator+(difference_t offset)
-	{
-		ContiguousIterator tmp = *this;
-		return tmp.operator+=(offset);
-	}
+  base_cont_iter &operator[](difference_t index) {
+    m_ProxyData += index;
+    return *this;
+  }
 
-	ContiguousIterator operator-(difference_t offset)
-	{
-		ContiguousIterator tmp = *this;
-		return tmp.operator-=(offset);
-	}
+  difference_t operator-(const base_cont_iter &other) {
+    return (m_ProxyData - other.m_ProxyData);
+  }
 
-	ContiguousIterator& operator[](difference_t index)
-	{
-		m_ProxyData += index;
-		return *this;
-	}
+  constexpr bool operator==(base_cont_iter const &other) const {
+    return this->m_ProxyData == other.m_ProxyData;
+  }
 
-	difference_t operator-(const ContiguousIterator& other)
-	{
-		return (m_ProxyData - other.m_ProxyData);
-	}
-
-	bool operator<(const ContiguousIterator& other)
-	{
-		return (operator-(other) > 0);
-	}
-
-	bool operator>(const ContiguousIterator& other)
-	{
-		return (operator-(other) < 0);
-	}
-
-	bool operator>=(const ContiguousIterator& other)
-	{
-		return !(operator<(other));
-	}
-
-	bool operator<=(const ContiguousIterator& other)
-	{
-		return !(operator>(other));
-	}
-
-	bool operator==(const ContiguousIterator& other) 
-	{
-		return (this->m_ProxyData == other.m_ProxyData);
-	}
-
-	bool operator!=(const ContiguousIterator& other)
-	{
-		return !operator==(other);
-	}
+  constexpr auto operator<=>(base_cont_iter const &other) const {
+    return this->m_ProxyData <=> other.m_ProxyData;
+  }
 
 private:
-
-	pointer_t m_ProxyData;
-
-	friend Container_t;
-	friend const_t;
+  pointer_t m_ProxyData;
 };
 
 template <typename Container_t>
-ContiguousIterator<Container_t> operator+
-(typename ContiguousIterator<Container_t>::difference_t offset, ContiguousIterator<Container_t> iter)
-{
-	return (iter += offset);
-}
+using BaseContigiousIterator_t =
+    base_cont_iter<typename Container_t::pointer,
+                   typename Container_t::reference,
+                   typename Container_t::difference_type>;
 
 template <typename Container_t>
-class ConstContiguousIterator
-{
-public:
+using BaseConstContiguousIterator_t =
+    base_cont_iter<typename Container_t::const_pointer,
+                   typename Container_t::const_reference,
+                   typename Container_t::difference_type>;
 
-	using value_t 		= const typename Container_t::value_t;
-	using pointer_t 	= typename Container_t::const_pointer_t;
-	using reference_t 	= const typename Container_t::reference_t;
-	using difference_t 	= typename Container_t::difference_t;
+} // namespace internal
 
-	using non_const_t 	= ContiguousIterator<Container_t>;
+template <typename Container_t>
+struct ContiguousIterator
+    : public internal::BaseContigiousIterator_t<Container_t> {
+  constexpr explicit ContiguousIterator() = default;
 
-public:
-
-	ConstContiguousIterator()
-		: m_ProxyData(nullptr) {}
-
-	ConstContiguousIterator(pointer_t proyData)
-		: m_ProxyData(proyData) {}
-
-	ConstContiguousIterator(const non_const_t& iterator)
-		: m_ProxyData(iterator.m_ProxyData) {}
-	
-	ConstContiguousIterator(const ConstContiguousIterator&) = default;
-
-	~ConstContiguousIterator() {}
-
-	pointer_t operator->() const { return m_ProxyData; }
-
-	reference_t operator*() const { return *m_ProxyData; }
-
-	ConstContiguousIterator& operator++()
-	{
-		++m_ProxyData;
-		return *this;
-	}
-
-	ConstContiguousIterator operator++(int)
-	{
-		ConstContiguousIterator tmp = *this;
-		++(*this);
-		return tmp;
-	}
-
-	ConstContiguousIterator& operator--()
-	{
-		--m_ProxyData;
-		return *this;
-	}
-
-	ConstContiguousIterator operator--(int)
-	{
-		ConstContiguousIterator tmp = *this;
-		++(*this);
-		return tmp;
-	}
-
-	ConstContiguousIterator& operator+=(difference_t offset)
-	{
-		m_ProxyData += offset;
-		return *this;
-	}
-
-	ConstContiguousIterator& operator-=(difference_t offset)
-	{
-		(*this) += -offset;
-		return *this;
-	}
-
-	ConstContiguousIterator operator+(difference_t offset)
-	{
-		ConstContiguousIterator tmp = *this;
-		return tmp.operator+=(offset);
-	}
-
-	ConstContiguousIterator operator-(difference_t offset)
-	{
-		ConstContiguousIterator tmp = *this;
-		return tmp.operator-=(offset);
-	}
-
-	ConstContiguousIterator& operator[](difference_t index)
-	{
-		m_ProxyData += index;
-		return *this;
-	}
-
-	difference_t operator-(const ConstContiguousIterator& other)
-	{
-		return (m_ProxyData - other.m_ProxyData);
-	}
-
-	bool operator<(const ConstContiguousIterator& other)
-	{
-		return (operator-(other) > 0);
-	}
-
-	bool operator>(const ConstContiguousIterator& other)
-	{
-		return (operator-(other) < 0);
-	}
-
-	bool operator>=(const ConstContiguousIterator& other)
-	{
-		return !(operator<(other));
-	}
-
-	bool operator<=(const ConstContiguousIterator& other)
-	{
-		return !(operator>(other));
-	}
-
-	bool operator==(const ConstContiguousIterator& other) 
-	{
-		return (this->m_ProxyData == other.m_ProxyData);
-	}
-
-	bool operator!=(const ConstContiguousIterator& other)
-	{
-		return !operator==(other);
-	}
-
-private:
-
-	pointer_t m_ProxyData;
-
-	friend Container_t;
+  constexpr explicit ContiguousIterator(Container_t::pointer proxyData)
+      : internal::BaseContigiousIterator_t<Container_t>{proxyData} {}
 };
 
 template <typename Container_t>
-ConstContiguousIterator<Container_t> operator+
-(typename ConstContiguousIterator<Container_t>::difference_t offset, ConstContiguousIterator<Container_t> iter)
-{
-	return (iter += offset);
-}
+struct ConstContiguousIterator
+    : public internal::BaseConstContiguousIterator_t<Container_t> {
+
+  constexpr explicit ConstContiguousIterator() = default;
+
+  constexpr explicit ConstContiguousIterator(
+      Container_t::const_pointer proxyData)
+      : internal::BaseConstContiguousIterator_t<Container_t>{proxyData} {}
+};
