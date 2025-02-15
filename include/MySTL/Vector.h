@@ -33,7 +33,7 @@ public:
 	Vector()
 		:m_Capacity(0), m_Size(0), m_Data(nullptr) {}
 
-	Vector(size_t size, const T& val = T());
+	Vector(std::size_t size, const T& val = T());
 
 	Vector(std::initializer_list<T> iList);
 
@@ -46,23 +46,23 @@ public:
 	// assignment operators
 
 	Vector& operator=(const Vector<T>& copy);
-	
+
 	Vector& operator=(Vector<T>&& move);
 
 	// Capacity
 
-	size_t capacity() const { return m_Capacity; }
+	std::size_t capacity() const { return m_Capacity; }
 
-	size_t size() const { return m_Size; }
+	std::size_t size() const { return m_Size; }
 
 	bool empty() const { return (m_Size == 0); }
 
-	void reserve(size_t capacity);
+	void reserve(std::size_t capacity);
 
 	// Accessors
 
-	T& operator[](size_t index);
-	const T& operator[](size_t index) const;
+	T& operator[](std::size_t index);
+	const T& operator[](std::size_t index) const;
 
 	T& front();
 	const T& front() const;
@@ -74,11 +74,11 @@ public:
 
 	void clear();
 
-	// TODO: add iterator versions	
+	// TODO: add iterator versions
 
-	void insert(size_t pos, const T& val = T(), size_t count = 1);
+	void insert(std::size_t pos, const T& val = T(), std::size_t count = 1);
 
-	void erase(size_t pos, size_t count = 1);
+	void erase(std::size_t pos, std::size_t count = 1);
 
 	void push_back(const T& val);
 	void push_back(T&& val);
@@ -88,35 +88,35 @@ public:
 
 	void pop_back();
 
-	void resize(size_t size, const T& val = T());
+	void resize(std::size_t size, const T& val = T());
 
 private:
 
-	void reallocate(size_t newCapacity);
+	void reallocate(std::size_t newCapacity);
 	void reallocate(bool increaseSize = false);
 
 	void deallocate();
 
-	void realloc_and_resize(size_t newSize);
+	void realloc_and_resize(std::size_t newSize);
 
 private:
 
 	static constexpr float m_GrowthFactor = 1.5f;
 	static constexpr float m_MaxSizeDiff = 50.0f;
 
-	size_t m_Capacity;
-	size_t m_Size;
+	std::size_t m_Capacity;
+	std::size_t m_Size;
 	pointer_t m_Data;
 };
 
 template <typename T>
-void Vector<T>::reallocate(size_t newCapacity)
+void Vector<T>::reallocate(std::size_t newCapacity)
 {
 	if (newCapacity - m_Size > m_MaxSizeDiff)
 		newCapacity = m_Size + m_MaxSizeDiff;
-	
+
 	T* newData = (T*)::operator new(newCapacity * sizeof(T));
-	for (size_t i = 0; i < m_Size; ++i)
+	for (std::size_t i = 0; i < m_Size; ++i)
 	{
 		newData[i] = std::move(m_Data[i]);
 		m_Data[i].~T();
@@ -130,7 +130,7 @@ void Vector<T>::reallocate(size_t newCapacity)
 template <typename T>
 void Vector<T>::reallocate(bool increaseSize)
 {
-	reallocate((size_t)(m_GrowthFactor * (m_Size + (size_t)increaseSize)));
+	reallocate((std::size_t)(m_GrowthFactor * (m_Size + (std::size_t)increaseSize)));
 }
 
 template<typename T>
@@ -142,19 +142,19 @@ void Vector<T>::deallocate()
 }
 
 template<typename T>
-void Vector<T>::realloc_and_resize(size_t newSize)
+void Vector<T>::realloc_and_resize(std::size_t newSize)
 {
-	reallocate((size_t)(m_GrowthFactor * newSize));
+	reallocate((std::size_t)(m_GrowthFactor * newSize));
 	m_Size = newSize;
 }
 
 template <typename T>
-Vector<T>::Vector(size_t size, const T& val)
+Vector<T>::Vector(std::size_t size, const T& val)
 	:Vector()
 {
 	realloc_and_resize(size);
 
-	for (size_t i = 0; i < size; ++i)
+	for (std::size_t i = 0; i < size; ++i)
 		m_Data[i] = val;
 }
 
@@ -165,7 +165,7 @@ Vector<T>::Vector(std::initializer_list<T> iList)
 	realloc_and_resize(iList.size());
 
 	const T* iListData = iList.begin();
-	for (size_t i = 0; i < m_Size; ++i)
+	for (std::size_t i = 0; i < m_Size; ++i)
 		m_Data[i] = std::move(iListData[i]);
 }
 
@@ -175,7 +175,7 @@ Vector<T>::Vector(const Vector<T>& copy)
 {
 	realloc_and_resize(copy.m_Size);
 
-	for (size_t i = 0; i < m_Size; ++i)
+	for (std::size_t i = 0; i < m_Size; ++i)
 		m_Data[i] = copy.m_Data[i];
 }
 
@@ -200,7 +200,7 @@ Vector<T>& Vector<T>::operator=(const Vector<T>& copy)
 		deallocate();
 		realloc_and_resize(copy.m_Size);
 
-		for (size_t i = 0; i < m_Size; ++i)
+		for (std::size_t i = 0; i < m_Size; ++i)
 			m_Data[i] = copy.m_Data[i];
 	}
 
@@ -223,7 +223,7 @@ Vector<T>& Vector<T>::operator=(Vector<T>&& move)
 }
 
 template <typename T>
-void Vector<T>::reserve(size_t capacity)
+void Vector<T>::reserve(std::size_t capacity)
 {
 	// Do not use reallocate
 
@@ -237,7 +237,7 @@ void Vector<T>::reserve(size_t capacity)
 }
 
 template <typename T>
-T& Vector<T>::operator[](size_t index)
+T& Vector<T>::operator[](std::size_t index)
 {
 	if (index > m_Size)
 		throw std::out_of_range("Vector index out of range!");
@@ -245,7 +245,7 @@ T& Vector<T>::operator[](size_t index)
 }
 
 template <typename T>
-const T& Vector<T>::operator[](size_t index) const
+const T& Vector<T>::operator[](std::size_t index) const
 {
 	if (index > m_Size)
 		throw std::out_of_range("Vector index out of range!");
@@ -287,7 +287,7 @@ const T& Vector<T>::back() const
 template <typename T>
 void Vector<T>::clear()
 {
-	for (size_t i = 0; i < m_Size; ++i)
+	for (std::size_t i = 0; i < m_Size; ++i)
 		m_Data[i].~T();
 
 	deallocate();
@@ -297,42 +297,42 @@ void Vector<T>::clear()
 }
 
 template <typename T>
-void Vector<T>::insert(size_t pos, const T& val, size_t count)
+void Vector<T>::insert(std::size_t pos, const T& val, std::size_t count)
 {
-	const size_t interPos = (m_Size > pos) ? m_Size : pos;
-	const size_t newSize = interPos + count;
-	const size_t oldSize = m_Size;
+	const std::size_t interPos = (m_Size > pos) ? m_Size : pos;
+	const std::size_t newSize = interPos + count;
+	const std::size_t oldSize = m_Size;
 
 	if (newSize > m_Capacity)
 		realloc_and_resize(newSize);
-	
-	for (size_t i = oldSize; i < pos; ++i)
+
+	for (std::size_t i = oldSize; i < pos; ++i)
 		m_Data[i] = T();
 
 	if (pos < oldSize)
 	{
-		const size_t offset = oldSize - pos;
-		for (size_t i = 1; i <= count; ++i)
+		const std::size_t offset = oldSize - pos;
+		for (std::size_t i = 1; i <= count; ++i)
 			m_Data[newSize - i] = std::move(m_Data[pos + offset - i]);
 	}
 
-	for (size_t i = 0; i < count; ++i)
+	for (std::size_t i = 0; i < count; ++i)
 		m_Data[pos + i] = val;
 }
 
 template <typename T>
-void Vector<T>::erase(size_t pos, size_t count)
+void Vector<T>::erase(std::size_t pos, std::size_t count)
 {
 	if (pos >= m_Size)
 		return;
-	
+
 	count = (m_Size - pos > count) ? count : (m_Size - pos);
 
-	for (size_t i = pos; i < m_Size - count; ++i)
+	for (std::size_t i = pos; i < m_Size - count; ++i)
 		m_Data[i] = std::move(m_Data[i + count]);
 
 	m_Size -= count;
-	
+
 	if ((m_GrowthFactor * m_Size < m_Capacity) ||
 		(m_Size < m_Capacity - m_MaxSizeDiff))
 		reallocate();
@@ -360,7 +360,7 @@ void Vector<T>::push_back(const T& val)
 template <typename T>
 void Vector<T>::push_back(T&& val)
 {
-	
+
 	if (m_Size + 1 >= m_Capacity)
 		reallocate(true);
 
@@ -383,14 +383,14 @@ void Vector<T>::pop_back()
 }
 
 template <typename T>
-void Vector<T>::resize(size_t size, const T& val)
+void Vector<T>::resize(std::size_t size, const T& val)
 {
 	if (size == m_Size)
 		return;
-		
-	size_t oldSize = m_Size;
+
+	std::size_t oldSize = m_Size;
 
 	realloc_and_resize(size);
-	for (size_t i = oldSize; i < size; ++i)
+	for (std::size_t i = oldSize; i < size; ++i)
 		*(m_Data + i) = val;
 }

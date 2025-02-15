@@ -16,7 +16,7 @@ public:
 
     using iterator          = typename Container_t::iterator;
     using const_iterator    = typename Container_t::const_iterator;
-    
+
     iterator begin() { return m_Underlying.begin(); }
     const_iterator begin() const { return m_Underlying.begin(); }
 
@@ -42,7 +42,7 @@ public:
 
     // Capacity
 
-    size_t size() const { return m_Underlying.size(); }
+    std::size_t size() const { return m_Underlying.size(); }
 
     bool empty() const { return m_Underlying.empty(); }
 

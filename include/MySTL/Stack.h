@@ -1,6 +1,7 @@
 #pragma once
 
 #include "List.h"
+#include <utility>
 
 template <typename T, typename Container_t = List<T>>
 class Stack
@@ -42,7 +43,7 @@ public:
 
     // Capacity
 
-    size_t size() const { return m_Underlying.size(); }
+    std::size_t size() const { return m_Underlying.size(); }
 
     bool empty() const { return m_Underlying.empty(); }
 

@@ -3,8 +3,9 @@
 #include "Iterator.h"
 #include <initializer_list>
 #include <cassert>
+#include <utility>
 
-template<typename T, size_t Size>
+template<typename T, std::size_t Size>
 class Array
 {
 public:
@@ -36,15 +37,15 @@ public:
 
 	// Capacity
 
-	constexpr size_t size() const { return Size; };
+	constexpr std::size_t size() const { return Size; };
 
 	// Accessors
 
 	T* data() { return m_Data; };
 	const T* data() const { return m_Data; };
 
-	T& operator[](size_t index);
-	const T& operator[](size_t index) const;
+	T& operator[](std::size_t index);
+	const T& operator[](std::size_t index) const;
 
 	T& front();
 	const T& front() const;
@@ -57,31 +58,31 @@ private:
 	value_t m_Data[Size];
 };
 
-template<typename T, size_t Size>
+template<typename T, std::size_t Size>
 Array<T, Size>::Array(std::initializer_list<T> list)
 {
 	const T* data = list.begin();
-	for (size_t i = 0; i < Size; ++i)
+	for (std::size_t i = 0; i < Size; ++i)
 		m_Data[i] = std::move(data[i]);
 }
 
-template<typename T, size_t Size>
-T& Array<T, Size>::operator[](size_t index)
+template<typename T, std::size_t Size>
+T& Array<T, Size>::operator[](std::size_t index)
 {
 	assert(index < Size);
 
 	return m_Data[index];
 }
 
-template<typename T, size_t Size>
-const T& Array<T, Size>::operator[](size_t index) const
+template<typename T, std::size_t Size>
+const T& Array<T, Size>::operator[](std::size_t index) const
 {
 	assert(index < Size);
-	
+
 	return m_Data[index];
 }
 
-template<typename T, size_t Size>
+template<typename T, std::size_t Size>
 T& Array<T, Size>::front()
 {
 	static_assert(Size != 0, "Size of array must not be zero!");
@@ -89,7 +90,7 @@ T& Array<T, Size>::front()
 	return m_Data[0];
 }
 
-template<typename T, size_t Size>
+template<typename T, std::size_t Size>
 const T& Array<T, Size>::front() const
 {
 	static_assert(Size != 0, "Size of array must not be zero!");
@@ -97,7 +98,7 @@ const T& Array<T, Size>::front() const
 	return m_Data[0];
 }
 
-template<typename T, size_t Size>
+template<typename T, std::size_t Size>
 T&  Array<T, Size>::back()
 {
 	static_assert(Size != 0, "Size of array must not be zero!");
@@ -105,7 +106,7 @@ T&  Array<T, Size>::back()
 	return m_Data[Size - 1];
 }
 
-template<typename T, size_t Size>
+template<typename T, std::size_t Size>
 const T&  Array<T, Size>::back() const
 {
 	static_assert(Size != 0, "Size of array must not be zero!");

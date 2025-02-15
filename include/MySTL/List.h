@@ -1,6 +1,7 @@
 #pragma once
 
 #include <initializer_list>
+#include <utility>
 #include "Iterator.h"
 
 template <typename T>
@@ -59,16 +60,16 @@ public:
     iterator begin() { return iterator(m_Head); }
     const_iterator begin() const { return const_iterator(m_Head); }
 
-    iterator end() 
+    iterator end()
     {
         m_End = List_Node_No_Value<T>(m_Tail, nullptr);
-        return (nodeptr_t)&m_End; 
+        return (nodeptr_t)&m_End;
     }
 
     const_iterator end() const
     {
         m_End = List_Node_No_Value<T>(m_Tail, nullptr);
-        return (nodeptr_t)&m_End; 
+        return (nodeptr_t)&m_End;
     }
 
 public:
@@ -78,14 +79,14 @@ public:
     List()
         :m_Head(nullptr), m_Tail(nullptr), m_Size(0) {}
 
-    List(size_t count, const T& val = T());
+    List(std::size_t count, const T& val = T());
 
     List(std::initializer_list<T> iList);
 
     List(const List& copy);
 
     List(List&& move);
-    
+
     ~List();
 
 	// assignment operators
@@ -96,7 +97,7 @@ public:
 
     // Capacity
 
-    size_t size() const { return m_Size; }
+    std::size_t size() const { return m_Size; }
 
     bool empty() const { return (m_Size == 0); }
 
@@ -142,14 +143,14 @@ public:
     // void merge(List& other)
     // void merge(List&& other)
 
-    // size_t remove(const T& compareData);
-    
-    // template<typename Predicate>
-    // size_t remove_if(Predicate pre);
+    // std::size_t remove(const T& compareData);
 
-    // size_t unique();
     // template<typename Predicate>
-    // size_t unique(Predicate pre);
+    // std::size_t remove_if(Predicate pre);
+
+    // std::size_t unique();
+    // template<typename Predicate>
+    // std::size_t unique(Predicate pre);
 
     // void reverse();
 
@@ -163,7 +164,7 @@ private:
 
     nodeptr_t m_Head;
     nodeptr_t m_Tail;
-    size_t m_Size;
+    std::size_t m_Size;
 
     mutable List_Node_No_Value<T> m_End;
 };
@@ -184,16 +185,16 @@ void List<T>::link_node(bool atTail, nodeptr_t val)
         {
             m_Head->prev = val;
             m_Head = val;
-        }   
+        }
     }
     m_Size++;
 }
 
 template <typename T>
-List<T>::List(size_t count, const T& val)
+List<T>::List(std::size_t count, const T& val)
     :List()
 {
-    for (size_t i = 0; i < count; ++i)
+    for (std::size_t i = 0; i < count; ++i)
         push_back(val);
 }
 
@@ -203,7 +204,7 @@ List<T>::List(std::initializer_list<T> iList)
 {
     const T* begin = iList.begin();
 
-    for (size_t i = 0; i < iList.size(); ++i)
+    for (std::size_t i = 0; i < iList.size(); ++i)
         push_back(std::move(begin[i]));
 }
 
@@ -212,7 +213,7 @@ List<T>::List(const List<T>& copy)
     :List()
 {
     nodeptr_t copyP = copy.m_Head;
-    
+
     while (copyP != nullptr)
     {
         reference_t data = copyP->data;
@@ -244,7 +245,7 @@ List<T>& List<T>::operator=(const List<T>& copy)
         clear();
 
         nodeptr_t copyP = copy.m_Head;
-        
+
         while (copyP != nullptr)
         {
             reference_t data = copyP->data;
@@ -270,9 +271,9 @@ List<T>& List<T>::operator=(List<T>&& move)
         move.m_Size = 0;
         move.m_Head = nullptr;
         move.m_Tail = nullptr;
-        
+
     }
-    
+
     return *this;
 }
 
@@ -365,12 +366,12 @@ void List<T>::erase(const_iterator begin, const_iterator end)
         first->next = last;
     else
         m_Head->next = last;
-    
+
     if (last)
         last->prev = first;
     else
         m_Tail = first;
-    
+
 }
 
 template <typename T>
