@@ -1,5 +1,7 @@
 #pragma once
 
+namespace mystl {
+
 template <typename Container_t>
 class ConstBidirectionalIterator;
 
@@ -145,58 +147,58 @@ public:
 
   ~base_cont_iter() {}
 
-  pointer_t operator->() const { return m_ProxyData; }
+  constexpr pointer_t operator->() const { return m_ProxyData; }
 
-  reference_t operator*() const { return *m_ProxyData; }
+  constexpr reference_t operator*() const { return *m_ProxyData; }
 
-  base_cont_iter &operator++() {
+  constexpr base_cont_iter &operator++() {
     ++m_ProxyData;
     return *this;
   }
 
-  base_cont_iter operator++(int) {
+  constexpr base_cont_iter operator++(int) {
     base_cont_iter tmp = *this;
     ++(*this);
     return tmp;
   }
 
-  base_cont_iter &operator--() {
+  constexpr base_cont_iter &operator--() {
     --m_ProxyData;
     return *this;
   }
 
-  base_cont_iter operator--(int) {
+  constexpr base_cont_iter operator--(int) {
     auto tmp = *this;
     ++(*this);
     return tmp;
   }
 
-  base_cont_iter &operator+=(difference_t offset) {
+  constexpr base_cont_iter &operator+=(difference_t offset) {
     m_ProxyData += offset;
     return *this;
   }
 
-  base_cont_iter &operator-=(difference_t offset) {
+  constexpr base_cont_iter &operator-=(difference_t offset) {
     (*this) += -offset;
     return *this;
   }
 
-  base_cont_iter operator+(difference_t offset) {
+  constexpr base_cont_iter operator+(difference_t offset) {
     auto tmp = *this;
     return tmp.operator+=(offset);
   }
 
-  base_cont_iter operator-(difference_t offset) {
+  constexpr base_cont_iter operator-(difference_t offset) {
     auto tmp = *this;
     return tmp.operator-=(offset);
   }
 
-  base_cont_iter &operator[](difference_t index) {
+  constexpr base_cont_iter &operator[](difference_t index) {
     m_ProxyData += index;
     return *this;
   }
 
-  difference_t operator-(const base_cont_iter &other) {
+  constexpr difference_t operator-(const base_cont_iter &other) {
     return (m_ProxyData - other.m_ProxyData);
   }
 
@@ -245,3 +247,5 @@ struct ConstContiguousIterator
       Container_t::const_pointer proxyData)
       : internal::BaseConstContiguousIterator_t<Container_t>{proxyData} {}
 };
+
+} // namespace mystl
