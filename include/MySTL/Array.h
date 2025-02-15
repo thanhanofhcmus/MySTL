@@ -1,115 +1,67 @@
 #pragma once
 
 #include "Iterator.h"
-#include <initializer_list>
 #include <cassert>
+#include <initializer_list>
 #include <utility>
 
-template<typename T, std::size_t Size>
-class Array
-{
+template <typename T, std::size_t Size>
+class Array {
 public:
+  using value_type = T;
+  using pointer = T *;
+  using const_pointer = T const *;
+  using reference = T &;
+  using const_reference = T const &;
 
-	using value_t 			= T;
-	using pointer_t 		= T*;
-	using const_pointer_t 	= const T*;
-	using reference_t 		= T&;
-	using difference_t		= std::ptrdiff_t;
+  using difference_type = std::ptrdiff_t;
+  using size_type = std::size_t;
 
-public:
-
-	using iterator       	= ContiguousIterator<Array<T, Size>>;
-	using const_iterator 	= ConstContiguousIterator<Array<T, Size>>;
-
-	iterator begin() { return iterator(m_Data); }
-	const_iterator begin() const { return const_iterator(m_Data); }
-
-	iterator end() { return iterator(m_Data + Size); }
-	const_iterator end() const { return const_iterator(m_Data + Size); }
+  using iterator = ContiguousIterator<Array<T, Size>>;
+  using const_iterator = ConstContiguousIterator<Array<T, Size>>;
 
 public:
+  constexpr iterator begin() { return iterator{m_Data}; }
+  constexpr const_iterator begin() const { return const_iterator{m_Data}; }
 
-	// Constructor
+  constexpr iterator end() { return iterator{m_Data + Size}; }
+  constexpr const_iterator end() const { return const_iterator{m_Data + Size}; }
 
-	Array() = default;
+public:
+  constexpr explicit Array() = default;
 
-	Array(std::initializer_list<T> list);
+  constexpr explicit Array(std::initializer_list<T> list) {
+    const T *data = list.begin();
+    for (std::size_t i = 0; i < Size; ++i)
+      m_Data[i] = std::move(data[i]);
+  }
 
-	// Capacity
+  constexpr size_type size() const { return Size; }
+  constexpr size_type max_size() const { return Size; }
 
-	constexpr std::size_t size() const { return Size; };
+  template <typename Self>
+  constexpr auto &&data(this Self &&self) {
+    return std::forward<Self>(self).m_Data;
+  }
 
-	// Accessors
+  template <typename Self>
+  constexpr auto &&operator[](this Self &&self, std::size_t index) {
+    assert(index < Size);
+    return std::forward<Self>(self).m_Data[index];
+  }
 
-	T* data() { return m_Data; };
-	const T* data() const { return m_Data; };
+  template <typename Self>
+  constexpr auto &&front(this Self &&self) {
+    static_assert(Size != 0, "Size of array must not be zero!");
+    return std::forward<Self>(self).m_Data[0];
+  }
 
-	T& operator[](std::size_t index);
-	const T& operator[](std::size_t index) const;
-
-	T& front();
-	const T& front() const;
-
-	T& back();
-	const T& back() const;
+  template <typename Self>
+  constexpr auto &&back(this Self &&self) {
+    static_assert(Size != 0, "Size of array must not be zero!");
+    return std::forward<Self>(self).m_Data[Size - 1];
+  }
 
 private:
-
-	value_t m_Data[Size];
+  value_type m_Data[Size];
 };
-
-template<typename T, std::size_t Size>
-Array<T, Size>::Array(std::initializer_list<T> list)
-{
-	const T* data = list.begin();
-	for (std::size_t i = 0; i < Size; ++i)
-		m_Data[i] = std::move(data[i]);
-}
-
-template<typename T, std::size_t Size>
-T& Array<T, Size>::operator[](std::size_t index)
-{
-	assert(index < Size);
-
-	return m_Data[index];
-}
-
-template<typename T, std::size_t Size>
-const T& Array<T, Size>::operator[](std::size_t index) const
-{
-	assert(index < Size);
-
-	return m_Data[index];
-}
-
-template<typename T, std::size_t Size>
-T& Array<T, Size>::front()
-{
-	static_assert(Size != 0, "Size of array must not be zero!");
-
-	return m_Data[0];
-}
-
-template<typename T, std::size_t Size>
-const T& Array<T, Size>::front() const
-{
-	static_assert(Size != 0, "Size of array must not be zero!");
-
-	return m_Data[0];
-}
-
-template<typename T, std::size_t Size>
-T&  Array<T, Size>::back()
-{
-	static_assert(Size != 0, "Size of array must not be zero!");
-
-	return m_Data[Size - 1];
-}
-
-template<typename T, std::size_t Size>
-const T&  Array<T, Size>::back() const
-{
-	static_assert(Size != 0, "Size of array must not be zero!");
-
-	return m_Data[Size - 1];
-}
