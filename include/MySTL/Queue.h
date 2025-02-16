@@ -1,72 +1,62 @@
 #pragma once
 
-#include "List.h"
+#include "Vector.h"
 
-template <typename T, typename Container_t = List<T>>
-class Queue
-{
+namespace mystl {
+
+template <typename T, typename Container_t = Vector<T>>
+class Queue {
 public:
+  using value_type = typename Container_t::value_t;
+  using pointer = typename Container_t::pointer_t;
+  using const_pointer_t = typename Container_t::const_pointer_t;
+  using reference = typename Container_t::reference_t;
+  using const_reference = typename Container_t::reference_type;
+  using size_type = typename Container_t::size_type;
 
-    // using value_t           = typename Container_t::value_t;
-    // using pointer_t         = typename Container_t::pointer_t;
-    // using const_pointer_t   = typename Container_t::const_pointer_t;
-    // using reference_t       = typename Container_t::reference_t;
-
-public:
-
-    using iterator          = typename Container_t::iterator;
-    using const_iterator    = typename Container_t::const_iterator;
-
-    iterator begin() { return m_Underlying.begin(); }
-    const_iterator begin() const { return m_Underlying.begin(); }
-
-    iterator end() { return m_Underlying.end(); }
-    const_iterator end() const { return m_Underlying.end(); }
+  using iterator = typename Container_t::iterator;
+  using const_iterator = typename Container_t::const_iterator;
 
 public:
+  constexpr explicit Queue() = default;
 
-    // Constructors - destructor
+  constexpr explicit Queue(Container_t const &containter)
+      : m_Underlying(containter) {}
 
-    Queue() = default;
+  constexpr size_type size() const { return m_Underlying.size(); }
 
-    explicit Queue(const Container_t& container)
-        : m_Underlying(container) {}
+  constexpr bool empty() const { return m_Underlying.empty(); }
 
-    Queue(const Queue&) = default;
-    Queue(Queue&&) = default;
+  iterator begin() { return m_Underlying.begin(); }
+  const_iterator begin() const { return m_Underlying.begin(); }
+  const_iterator cbegin() const { return m_Underlying.cbegin(); }
 
-    // Assignment operators
+  iterator end() { return m_Underlying.end(); }
+  const_iterator end() const { return m_Underlying.end(); }
+  const_iterator cend() const { return m_Underlying.cend(); }
 
-    Queue& operator=(const Queue&) = default;
-    Queue& operator=(Queue&&) = default;
+  template <typename Self>
+  constexpr auto &&front(this Self &&self) {
+    return std::forward<Self>(self).front();
+  }
 
-    // Capacity
+  template <typename Self>
+  constexpr auto &&back(this Self &&self) {
+    return std::forward<Self>(self).back();
+  }
 
-    std::size_t size() const { return m_Underlying.size(); }
+  constexpr void push(T const &val) { m_Underlying.push_back(val); }
+  constexpr void push(T &&val) { m_Underlying.push_back(std::move(val)); }
 
-    bool empty() const { return m_Underlying.empty(); }
+  template <typename... Args>
+  constexpr void emplace(Args &&...args) {
+    m_Underlying.emplace_back(std::forward<Args>(args)...);
+  }
 
-    // Accessors
-
-    T& front() { return m_Underlying.front(); }
-    const T& front() const { return m_Underlying.front(); }
-
-    T& back() { return m_Underlying.back(); }
-    const T& back() const { return m_Underlying.back(); }
-
-    // Modifiers
-
-    void clear() { m_Underlying.clear(); }
-
-    void push(const T& val) { m_Underlying.push_back(val); }
-    void push(T&& val) { m_Underlying.push_back(std::move(val)); }
-
-    template <typename... Args>
-    void emplace(Args&&... args) { m_Underlying.emplace_back(std::forward<Args>(args)...); }
-
-    void pop() { m_Underlying.pop_front(); }
+  constexpr void pop() { m_Underlying.pop_back(); }
 
 private:
-
-    Container_t m_Underlying;
+  Container_t m_Underlying;
 };
+
+} // namespace mystl

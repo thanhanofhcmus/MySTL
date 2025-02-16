@@ -1,70 +1,63 @@
 #pragma once
 
-#include "List.h"
+#include "Vector.h"
 #include <utility>
 
-template <typename T, typename Container_t = List<T>>
-class Stack
-{
+namespace mystl {
+
+template <typename T, typename Container_t = Vector<T>>
+class Stack {
 public:
+  using value_type = typename Container_t::value_t;
+  using pointer = typename Container_t::pointer_t;
+  using const_pointer_t = typename Container_t::const_pointer_t;
+  using reference = typename Container_t::reference_t;
+  using const_reference = typename Container_t::reference_type;
+  using size_type = typename Container_t::size_type;
 
-    // using value_t           = typename Container_t::value_t;
-    // using pointer_t         = typename Containter_t::pointer_t;
-    // using const_pointer_t   = typename Containter_t::const_pointer_t;
-    // using reference_t       = typename Containter_t::reference_t;
-
-public:
-
-    using iterator          = typename Container_t::iterator;
-    using const_iterator    = typename Container_t::const_iterator;
-
-    iterator begin() { return m_Underlying.begin(); }
-    const_iterator begin() const { return m_Underlying.begin(); }
-
-    iterator end() { return m_Underlying.end(); }
-    const_iterator end() const { return m_Underlying.end(); }
+  using iterator = typename Container_t::iterator;
+  using const_iterator = typename Container_t::const_iterator;
 
 public:
+  constexpr explicit Stack() = default;
 
-    // Constructors - destructor
+  constexpr explicit Stack(const Container_t &containter)
+      : m_Underlying(containter) {}
 
-    Stack() = default;
+  constexpr Stack &operator=(const Stack &) = default;
+  constexpr Stack &operator=(Stack &&) = default;
 
-    explicit Stack(const Container_t& containter)
-        : m_Underlying(containter) {}
+  constexpr size_type size() const { return m_Underlying.size(); }
 
-    Stack(const Stack&) = default;
-    Stack(Stack&&) = default;
+  constexpr bool empty() const { return m_Underlying.empty(); }
 
-    // Assignment operators
+  iterator begin() { return m_Underlying.begin(); }
+  const_iterator begin() const { return m_Underlying.begin(); }
+  const_iterator cbegin() const { return m_Underlying.cbegin(); }
 
-    Stack& operator=(const Stack&) = default;
-    Stack& operator=(Stack&&) = default;
+  iterator end() { return m_Underlying.end(); }
+  const_iterator end() const { return m_Underlying.end(); }
+  const_iterator cend() const { return m_Underlying.cend(); }
 
-    // Capacity
+  template <typename Self>
+  constexpr auto &&top(this Self &&self) {
+    return std::forward<Self>(self).back();
+  }
 
-    std::size_t size() const { return m_Underlying.size(); }
+  constexpr void clear() { m_Underlying.clear(); }
 
-    bool empty() const { return m_Underlying.empty(); }
+  constexpr void push(const T &val) { m_Underlying.push_back(val); }
+  constexpr void push(T &&val) { m_Underlying.push_back(std::move(val)); }
 
-    // Accessor
+  template <typename... Args>
+  constexpr void emplace(Args &&...args) {
+    m_Underlying.emplace_back(std::forward<Args>(args)...);
+  }
 
-    T& top() { return m_Underlying.back(); }
-    const T& top() const { return m_Underlying.back(); }
-
-    // Modifiers
-
-    void clear() { m_Underlying.clear(); }
-
-    void push(const T& val) { m_Underlying.push_back(val); }
-    void push(T&& val) { m_Underlying.push_back(std::move(val)); }
-
-    template <typename... Args>
-    void emplace(Args&&... args) { m_Underlying.emplace_back(std::forward<Args>(args)...); }
-
-    void pop() { m_Underlying.pop_back(); }
+  constexpr void pop() { m_Underlying.pop_back(); }
 
 private:
-
-    Container_t m_Underlying;
+  Container_t m_Underlying;
 };
+
+} // namespace mystl
