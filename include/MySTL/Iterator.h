@@ -2,131 +2,85 @@
 
 namespace mystl {
 
-template <typename Container_t>
-class ConstBidirectionalIterator;
+namespace internal {
 
-template <typename Container_t>
-class BidirectionalIterator {
+template <typename nodeptr_type, typename pointer_t, typename reference_t>
+class base_bidirect_iter {
 public:
-  using value_type = typename Container_t::value_type;
-  using pointer_type = typename Container_t::pointer_type;
-  using reference_type = typename Container_t::reference_type;
-  using nodeptr_type = typename Container_t::nodeptr_type;
+  constexpr explicit base_bidirect_iter() : m_ProxyData(nullptr) {}
 
-  using const_type = ConstBidirectionalIterator<Container_t>;
-
-public:
-  explicit BidirectionalIterator() : m_ProxyData(nullptr) {}
-
-  explicit BidirectionalIterator(nodeptr_type proxyData)
+  constexpr explicit base_bidirect_iter(nodeptr_type proxyData)
       : m_ProxyData(proxyData) {}
 
-  explicit BidirectionalIterator(const BidirectionalIterator &) = default;
+  constexpr explicit base_bidirect_iter(const base_bidirect_iter &) = default;
 
-  ~BidirectionalIterator() = default;
+  constexpr ~base_bidirect_iter() = default;
 
-  pointer_type operator->() const { return &(m_ProxyData->data); }
+  constexpr pointer_t operator->() const { return &(m_ProxyData->data); }
 
-  reference_type operator*() const { return m_ProxyData->data; }
+  constexpr reference_t operator*() const { return m_ProxyData->data; }
 
-  BidirectionalIterator &operator++() {
+  constexpr base_bidirect_iter &operator++() {
     m_ProxyData = m_ProxyData->next;
     return *this;
   }
 
-  BidirectionalIterator operator++(int) {
+  constexpr base_bidirect_iter operator++(int) {
     auto tmp = *this;
     (*this).operator++();
     return tmp;
   }
 
-  BidirectionalIterator operator--() {
+  constexpr base_bidirect_iter operator--() {
     m_ProxyData = m_ProxyData->prev;
     return *this;
   }
 
-  BidirectionalIterator operator--(int) {
+  constexpr base_bidirect_iter operator--(int) {
     auto tmp = *this;
     (*this).operator--();
     return tmp;
   }
 
-  bool operator==(const BidirectionalIterator &other) {
+  constexpr bool operator==(const base_bidirect_iter &other) {
     return (m_ProxyData == other.m_ProxyData);
-  }
-
-  bool operator!=(const BidirectionalIterator &other) {
-    return !operator==(other);
   }
 
 private:
   nodeptr_type m_ProxyData;
-
-  friend Container_t;
-  friend const_type;
 };
 
 template <typename Container_t>
-class ConstBidirectionalIterator {
-public:
-  using value_t = const typename Container_t::value_t;
-  using pointer_t = typename Container_t::const_pointer_t;
-  using reference_t = const typename Container_t::reference_t;
-  using nodeptr_t = typename Container_t::nodeptr_t;
-  // Might need to change from nodeptr_t to const_nodeptr_t
+using BaseBidirectionalIterator_t =
+    base_bidirect_iter<typename Container_t::nodeptr_type,
+                       typename Container_t::pointer,
+                       typename Container_t::reference>;
 
-  using non_const_t = BidirectionalIterator<Container_t>;
+template <typename Container_t>
+using BaseConstBidirectionalIterator_t =
+    base_bidirect_iter<typename Container_t::nodeptr_type, // const_nodeptr_type
+                       typename Container_t::const_pointer,
+                       typename Container_t::const_reference>;
 
-public:
-  ConstBidirectionalIterator() : m_ProxyData(nullptr) {}
+} // namespace internal
 
-  ConstBidirectionalIterator(nodeptr_t proxyData) : m_ProxyData(proxyData) {}
+template <typename Container_t>
+struct BidirectionalIterator
+    : public internal::BaseBidirectionalIterator_t<Container_t> {
+  constexpr explicit BidirectionalIterator() = default;
 
-  ConstBidirectionalIterator(const non_const_t &iterator)
-      : m_ProxyData(iterator.m_ProxyData) {}
+  explicit BidirectionalIterator(Container_t::nodeptr_type proxyData)
+      : internal::BaseBidirectionalIterator_t<Container_t>{proxyData} {}
+};
 
-  ConstBidirectionalIterator(const ConstBidirectionalIterator &) = default;
+template <typename Container_t>
+struct ConstBidirectionalIterator
+    : public internal::BaseConstBidirectionalIterator_t<Container_t> {
+  constexpr explicit ConstBidirectionalIterator() = default;
 
-  ~ConstBidirectionalIterator() {}
-
-  pointer_t operator->() const { return &(m_ProxyData->data); }
-
-  reference_t operator*() const { return m_ProxyData->data; }
-
-  ConstBidirectionalIterator &operator++() {
-    m_ProxyData = m_ProxyData->next;
-    return *this;
-  }
-
-  ConstBidirectionalIterator operator++(int) {
-    auto tmp = *this;
-    (*this).operator++();
-    return tmp;
-  }
-
-  ConstBidirectionalIterator operator--() {
-    m_ProxyData = m_ProxyData->prev;
-    return *this;
-  }
-
-  ConstBidirectionalIterator operator--(int) {
-    auto tmp = *this;
-    (*this).operator--();
-    return tmp;
-  }
-
-  bool operator==(const ConstBidirectionalIterator &other) {
-    return (m_ProxyData == other.m_ProxyData);
-  }
-
-  bool operator!=(const ConstBidirectionalIterator &other) {
-    return !operator==(other);
-  }
-
-private:
-  nodeptr_t m_ProxyData;
-
-  friend Container_t;
+  constexpr explicit ConstBidirectionalIterator(
+      Container_t::nodeptr_type proxyData)
+      : internal::BaseConstBidirectionalIterator_t<Container_t>{proxyData} {}
 };
 
 namespace internal {
@@ -138,10 +92,10 @@ public:
   using reference_type = reference_t;
   using difference_type = difference_t;
 
-  constexpr explicit base_cont_iter() : m_ProxyData(nullptr) {}
+  constexpr explicit base_cont_iter() : m_ProxyData{nullptr} {}
 
   constexpr explicit base_cont_iter(pointer_t proyData)
-      : m_ProxyData(proyData) {}
+      : m_ProxyData{proyData} {}
 
   constexpr explicit base_cont_iter(const base_cont_iter &) = default;
 
@@ -240,7 +194,6 @@ struct ContiguousIterator
 template <typename Container_t>
 struct ConstContiguousIterator
     : public internal::BaseConstContiguousIterator_t<Container_t> {
-
   constexpr explicit ConstContiguousIterator() = default;
 
   constexpr explicit ConstContiguousIterator(
